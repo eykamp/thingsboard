@@ -654,8 +654,9 @@ export default class Subscription {
             if (!sourceData.data.length) {
                 update = false;
             } else if (prevData && prevData[0] && prevData[0].length > 1 && sourceData.data.length > 0) {
+                var prevTs = prevData[0][0];
                 var prevValue = prevData[0][1];
-                if (prevValue === sourceData.data[0][1]) {
+                if (prevTs === sourceData.data[0][0] && prevValue === sourceData.data[0][1]) {
                     update = false;
                 }
             }
@@ -674,11 +675,14 @@ export default class Subscription {
 
     alarmsUpdated(alarms, apply) {
         this.notifyDataLoaded();
+        var updated = !this.alarms || !angular.equals(this.alarms, alarms);
         this.alarms = alarms;
         if (this.subscriptionTimewindow && this.subscriptionTimewindow.realtimeWindowMs) {
             this.updateTimewindow();
         }
-        this.onDataUpdated(apply);
+        if (updated) {
+            this.onDataUpdated(apply);
+        }
     }
 
     updateLegend(dataIndex, data, apply) {
@@ -793,7 +797,7 @@ export default class Subscription {
                 subscription.alarmsUpdated(alarms, apply);
             }
         }
-        this.alarms = [];
+        this.alarms = null;
 
         this.ctx.alarmService.subscribeForAlarms(this.alarmSourceListener);
 

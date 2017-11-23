@@ -22,7 +22,7 @@ import Subscription from '../../api/subscription';
 /*@ngInject*/
 export default function WidgetController($scope, $state, $timeout, $window, $element, $q, $log, $injector, $filter, $compile, tbRaf, types, utils, timeService,
                                          datasourceService, alarmService, entityService, dashboardService, deviceService, visibleRect, isEdit, isMobile, dashboardTimewindow,
-                                         dashboardTimewindowApi, widget, aliasController, stateController, widgetInfo, widgetType) {
+                                         dashboardTimewindowApi, dashboard, widget, aliasController, stateController, widgetInfo, widgetType) {
 
     var vm = this;
 
@@ -67,6 +67,7 @@ export default function WidgetController($scope, $state, $timeout, $window, $ele
         hideTitlePanel: false,
         isEdit: isEdit,
         isMobile: isMobile,
+        dashboard: dashboard,
         widgetConfig: widget.config,
         settings: widget.config.settings,
         units: widget.config.units || '',
@@ -546,16 +547,16 @@ export default function WidgetController($scope, $state, $timeout, $window, $ele
             var legendStyle;
             switch($scope.legendConfig.position) {
                 case types.position.top.value:
-                    legendStyle = 'padding-bottom: 8px;';
+                    legendStyle = 'padding-bottom: 8px; max-height: 50%; overflow-y: auto;';
                     break;
                 case types.position.bottom.value:
-                    legendStyle = 'padding-top: 8px;';
+                    legendStyle = 'padding-top: 8px; max-height: 50%; overflow-y: auto;';
                     break;
                 case types.position.left.value:
-                    legendStyle = 'padding-right: 0px;';
+                    legendStyle = 'padding-right: 0px; max-width: 50%; overflow-y: auto;';
                     break;
                 case types.position.right.value:
-                    legendStyle = 'padding-left: 0px;';
+                    legendStyle = 'padding-left: 0px; max-width: 50%; overflow-y: auto;';
                     break;
             }
 

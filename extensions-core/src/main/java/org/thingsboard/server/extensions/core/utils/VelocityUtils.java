@@ -24,6 +24,7 @@ import org.apache.velocity.runtime.parser.node.SimpleNode;
 import org.apache.velocity.tools.generic.DateTool;
 import org.thingsboard.server.common.data.kv.AttributeKvEntry;
 import org.thingsboard.server.common.data.kv.BasicTsKvEntry;
+import org.thingsboard.server.common.msg.core.BasicUpdateAttributesRequest;
 import org.thingsboard.server.common.msg.core.TelemetryUploadRequest;
 import org.thingsboard.server.common.msg.session.FromDeviceMsg;
 import org.thingsboard.server.extensions.api.device.DeviceAttributes;
@@ -65,6 +66,7 @@ public class VelocityUtils {
         return context;
     }
 
+    // Build a dictionary of values available to the parser
     public static VelocityContext createContext(DeviceMetaData deviceMetaData, FromDeviceMsg payload) {
         VelocityContext context = new VelocityContext();
         context.put("date", new DateTool());

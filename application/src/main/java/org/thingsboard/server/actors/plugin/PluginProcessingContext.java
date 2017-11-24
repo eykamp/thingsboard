@@ -204,6 +204,14 @@ public final class PluginProcessingContext implements PluginContext {
     }
 
     @Override
+    public void removeTimeseriesValue(final EntityId entityId, final TsKvEntry entry, final PluginCallback<Void> callback) {
+        validate(entityId, new ValidationCallback(callback, ctx -> {
+            ListenableFuture<Void> future = pluginCtx.tsService.removeEntry(entityId, entry);
+            Futures.addCallback(future, getCallback(callback, v -> null), executor);
+        }));
+    }
+
+    @Override
     public void reply(PluginToRuleMsg<?> msg) {
         pluginCtx.parentActor.tell(msg, ActorRef.noSender());
     }

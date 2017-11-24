@@ -92,6 +92,9 @@ public interface PluginContext {
 
     void loadLatestTimeseries(EntityId entityId, PluginCallback<List<TsKvEntry>> callback);
 
+    void removeTimeseriesValue(EntityId entityId, TsKvEntry entry, PluginCallback<Void> callback);
+
+
     /*
         Attributes API
      */

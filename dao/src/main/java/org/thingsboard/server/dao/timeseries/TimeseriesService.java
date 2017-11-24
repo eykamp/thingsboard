@@ -34,6 +34,8 @@ public interface TimeseriesService {
 
     ListenableFuture<List<TsKvEntry>> findAllLatest(EntityId entityId);
 
+    ListenableFuture<Void> removeEntry(EntityId entityId, TsKvEntry entry);
+
     ListenableFuture<List<Void>> save(EntityId entityId, TsKvEntry tsKvEntry);
 
     ListenableFuture<List<Void>> save(EntityId entityId, List<TsKvEntry> tsKvEntry, long ttl);

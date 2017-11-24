@@ -313,37 +313,82 @@ public class TelemetryRestMsgHandler extends DefaultRestMsgHandler {
             String[] pathParams = request.getPathParams();
             EntityId entityId;
             String scope;
+            TelemetryFeature feature;
             if (pathParams.length == 2) {
                 entityId = DeviceId.fromString(pathParams[0]);
                 scope = pathParams[1];
+                feature = TelemetryFeature.ATTRIBUTES;
             } else if (pathParams.length == 3) {
                 entityId = EntityIdFactory.getByTypeAndId(pathParams[0], pathParams[1]);
                 scope = pathParams[2];
+                feature = TelemetryFeature.ATTRIBUTES;
+            } else if (pathParams.length == 4) {
+                entityId = EntityIdFactory.getByTypeAndId(pathParams[0], pathParams[1]);
+                feature = TelemetryFeature.forName(pathParams[2].toUpperCase());
+                scope = pathParams[3];
+            } else if (pathParams.length == 5) {
+                entityId = EntityIdFactory.getByTypeAndId(pathParams[0], pathParams[1]);
+                feature = TelemetryFeature.forName(pathParams[2].toUpperCase());
+                scope = pathParams[3];
             } else {
                 msg.getResponseHolder().setResult(new ResponseEntity<>(HttpStatus.BAD_REQUEST));
                 return;
             }
 
-            if (DataConstants.SERVER_SCOPE.equals(scope) ||
-                    DataConstants.SHARED_SCOPE.equals(scope) ||
-                    DataConstants.CLIENT_SCOPE.equals(scope)) {
-                String keysParam = request.getParameter("keys");
-                if (!StringUtils.isEmpty(keysParam)) {
-                    String[] keys = keysParam.split(",");
-                    ctx.removeAttributes(ctx.getSecurityCtx().orElseThrow(IllegalArgumentException::new).getTenantId(), entityId, scope, Arrays.asList(keys), new PluginCallback<Void>() {
-                        @Override
-                        public void onSuccess(PluginContext ctx, Void value) {
-                            msg.getResponseHolder().setResult(new ResponseEntity<>(HttpStatus.OK));
-                        }
+            if (feature == TelemetryFeature.ATTRIBUTES) {
+                // Check for the various attribute scopes
+                if (DataConstants.SERVER_SCOPE.equals(scope) ||
+                        DataConstants.SHARED_SCOPE.equals(scope) ||
+                        DataConstants.CLIENT_SCOPE.equals(scope)) {
+                    String keysParam = request.getParameter("keys");
+                    if (!StringUtils.isEmpty(keysParam)) {
+                        String[] keys = keysParam.split(",");
+                        ctx.removeAttributes(ctx.getSecurityCtx().orElseThrow(IllegalArgumentException::new).getTenantId(), entityId, scope, Arrays.asList(keys), new PluginCallback<Void>() {
+                            @Override
+                            public void onSuccess(PluginContext ctx, Void value) {
+                                msg.getResponseHolder().setResult(new ResponseEntity<>(HttpStatus.OK));
+                            }
+    
+                            @Override
+                            public void onFailure(PluginContext ctx, Exception e) {
+                                log.error("Failed to remove attributes", e);
+                                handleError(e, msg, HttpStatus.INTERNAL_SERVER_ERROR);
+                            }
+                        });
+                        return; 
+                    }  // else scope is invalid
+                }
+            } else if (feature == TelemetryFeature.TIMESERIES) {
+                String key = request.getParameter("key");
+                Optional<Long> ts = request.getLongParamValue("ts");
 
-                        @Override
-                        public void onFailure(PluginContext ctx, Exception e) {
-                            log.error("Failed to remove attributes", e);
-                            handleError(e, msg, HttpStatus.INTERNAL_SERVER_ERROR);
-                        }
-                    });
+                if(key == null) {
+                    String errorMsg = "Must specify key of record to delete!" ;
+                    log.error(errorMsg);
+                    handleError(errorMsg, msg, HttpStatus.BAD_REQUEST);
                     return;
                 }
+                if(!ts.isPresent()) {
+                    String errorMsg = "Must specify timestamp of record to delete!";
+                    log.error(errorMsg);
+                    handleError(errorMsg, msg, HttpStatus.INTERNAL_SERVER_ERROR);
+                    return;
+                }
+
+                TsKvEntry entry = new BasicTsKvEntry(ts.get(), new StringDataEntry(key, key));
+                ctx.removeTimeseriesValue(entityId, entry, new PluginCallback<Void>() {
+                    @Override
+                    public void onSuccess(PluginContext ctx, Void value) {
+                        msg.getResponseHolder().setResult(new ResponseEntity<>(HttpStatus.OK));
+                    }
+
+                    @Override
+                    public void onFailure(PluginContext ctx, Exception e) {
+                        log.error("Failed to remove timeseries data", e);
+                        handleError(e, msg, HttpStatus.INTERNAL_SERVER_ERROR);
+                    }
+                });
+                return;
             }
         } catch (RuntimeException e) {
             log.debug("Failed to process DELETE request due to Runtime exception", e);
@@ -386,7 +431,6 @@ public class TelemetryRestMsgHandler extends DefaultRestMsgHandler {
         };
     }
 
-
     private PluginCallback<List<TsKvEntry>> getTsKvListCallback(final PluginRestMsg msg) {
         return new PluginCallback<List<TsKvEntry>>() {
             @Override
@@ -423,4 +467,8 @@ public class TelemetryRestMsgHandler extends DefaultRestMsgHandler {
         msg.getResponseHolder().setResult(responseEntity);
     }
 
+    private void handleError(String errorMsg, PluginRestMsg msg, HttpStatus errorStatus) {
+        ResponseEntity responseEntity = new ResponseEntity<>(errorMsg, errorStatus);
+        msg.getResponseHolder().setResult(responseEntity);
+    }
 }

@@ -61,6 +61,15 @@ public class BaseTimeseriesService implements TimeseriesService {
     }
 
     @Override
+    public ListenableFuture<Void> removeEntry(final EntityId entityId, final TsKvEntry entry) {
+        validate(entityId);
+        if (entry == null) {
+            throw new IncorrectParameterException("Key value entry can't be null");
+        }
+        return timeseriesDao.remove(entityId, entry);
+    }
+
+    @Override
     public ListenableFuture<List<TsKvEntry>> findAllLatest(EntityId entityId) {
         validate(entityId);
         return timeseriesDao.findAllLatest(entityId);

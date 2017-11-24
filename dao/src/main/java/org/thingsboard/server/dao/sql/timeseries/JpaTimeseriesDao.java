@@ -23,11 +23,14 @@ import com.google.common.util.concurrent.SettableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
+import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.UUIDConverter;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.kv.*;
 import org.thingsboard.server.dao.DaoUtil;
+import org.thingsboard.server.dao.model.sql.TsKvCompositeKey;
 import org.thingsboard.server.dao.model.sql.TsKvEntity;
 import org.thingsboard.server.dao.model.sql.TsKvLatestCompositeKey;
 import org.thingsboard.server.dao.model.sql.TsKvLatestEntity;
@@ -36,6 +39,7 @@ import org.thingsboard.server.dao.timeseries.TimeseriesDao;
 import org.thingsboard.server.dao.util.SqlDao;
 
 import javax.annotation.Nullable;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -234,6 +238,15 @@ public class JpaTimeseriesDao extends JpaAbstractDaoListeningExecutorService imp
         entity.setBooleanValue(tsKvEntry.getBooleanValue().orElse(null));
         return service.submit(() -> {
             tsKvRepository.save(entity);
+            return null;
+        });
+    }
+
+    @Override
+    public ListenableFuture<Void> remove(EntityId entityId, TsKvEntry tsKvEntry) {
+        TsKvCompositeKey key = new TsKvCompositeKey(entityId.getEntityType(), entityId.toString(), tsKvEntry.getKey(), tsKvEntry.getTs());
+        return service.submit(() -> {
+            tsKvRepository.delete(key);
             return null;
         });
     }

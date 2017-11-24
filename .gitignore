@@ -32,3 +32,9 @@ pom.xml.versionsBackup
 **/Californium.properties
 **/.env
 .instance_id
+node_modules/**
+package-lock.json
+
+install\.bat
+
+startui\.bat

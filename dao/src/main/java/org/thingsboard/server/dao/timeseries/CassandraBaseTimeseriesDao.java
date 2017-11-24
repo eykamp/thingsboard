@@ -79,6 +79,7 @@ public class CassandraBaseTimeseriesDao extends CassandraAbstractAsyncDao implem
     private PreparedStatement[] fetchStmts;
     private PreparedStatement findLatestStmt;
     private PreparedStatement findAllLatestStmt;
+    private PreparedStatement deleteStmt;
 
     private boolean isInstall() {
         return environment.acceptsProfiles("install");
@@ -270,6 +271,18 @@ public class CassandraBaseTimeseriesDao extends CassandraAbstractAsyncDao implem
         stmt.setUUID(1, entityId.getId());
         log.debug(GENERATED_QUERY_FOR_ENTITY_TYPE_AND_ENTITY_ID, stmt, entityId.getEntityType(), entityId.getId());
         return getFuture(executeAsyncRead(stmt), rs -> convertResultToTsKvEntryList(rs.all()));
+    }
+
+    @Override
+    public ListenableFuture<Void> remove(EntityId entityId, TsKvEntry tsKvEntry) {
+        BoundStatement stmt = getDeleteStmt().bind();
+
+        stmt.setString(0, entityId.getEntityType().name())
+                .setUUID(1, entityId.getId())
+                .setString(2, tsKvEntry.getKey())
+                .setLong(3, tsKvEntry.getTs());
+
+        return getFuture(executeAsyncWrite(stmt), rs -> null);
     }
 
     @Override
@@ -509,6 +522,19 @@ public class CassandraBaseTimeseriesDao extends CassandraAbstractAsyncDao implem
         }
         return findAllLatestStmt;
     }
+
+    private PreparedStatement getDeleteStmt() {
+        if (deleteStmt == null) {
+            deleteStmt = getSession().prepare("DELETE FROM " + ModelConstants.TS_KV_CF + " " +
+                    "WHERE " + ModelConstants.ENTITY_TYPE_COLUMN + " = ? " +
+                    "AND " + ModelConstants.ENTITY_ID_COLUMN + " = ? " +
+                    "AND " + ModelConstants.KEY_COLUMN + " = ? " +
+                    "AND " + ModelConstants.TS_COLUMN + " = ?");
+        }
+        return deleteStmt;
+    }
+
+
 
     private static String getColumnName(DataType type) {
         switch (type) {

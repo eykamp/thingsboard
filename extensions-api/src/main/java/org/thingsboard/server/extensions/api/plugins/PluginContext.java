@@ -48,6 +48,7 @@ public interface PluginContext {
 
     void persistError(String method, Exception e);
 
+
     /*
         Device RPC API
      */
@@ -69,16 +70,17 @@ public interface PluginContext {
 
     void close(PluginWebsocketSessionRef sessionRef) throws IOException;
 
+
     /*
         Plugin RPC API
      */
 
     void sendPluginRpcMsg(RpcMsg msg);
 
+
     /*
         Timeseries API
      */
-
 
     void saveTsData(EntityId entityId, TsKvEntry entry, PluginCallback<Void> callback);
 
@@ -117,8 +119,8 @@ public interface PluginContext {
 
 
     /*
-    *   Relations API
-    * */
+       Relations API
+     */
 
     ListenableFuture<List<EntityRelation>> findByFromAndType(EntityId from, String relationType);
 

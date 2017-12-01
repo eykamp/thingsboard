@@ -244,7 +244,7 @@ public class JpaTimeseriesDao extends JpaAbstractDaoListeningExecutorService imp
 
     @Override
     public ListenableFuture<Void> remove(EntityId entityId, TsKvEntry tsKvEntry) {
-        TsKvCompositeKey key = new TsKvCompositeKey(entityId.getEntityType(), entityId.toString(), tsKvEntry.getKey(), tsKvEntry.getTs());
+        TsKvCompositeKey key = new TsKvCompositeKey(entityId.getEntityType(), fromTimeUUID(entityId.getId()).toString(), tsKvEntry.getKey(), tsKvEntry.getTs());
         return service.submit(() -> {
             tsKvRepository.delete(key);
             return null;

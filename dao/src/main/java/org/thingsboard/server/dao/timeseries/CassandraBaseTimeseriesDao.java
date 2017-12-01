@@ -534,8 +534,6 @@ public class CassandraBaseTimeseriesDao extends CassandraAbstractAsyncDao implem
         return deleteStmt;
     }
 
-
-
     private static String getColumnName(DataType type) {
         switch (type) {
             case BOOLEAN:

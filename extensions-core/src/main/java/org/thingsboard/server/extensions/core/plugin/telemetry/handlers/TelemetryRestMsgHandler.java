@@ -363,11 +363,11 @@ public class TelemetryRestMsgHandler extends DefaultRestMsgHandler {
                     }  // else scope is invalid
                 }
             } else if (feature == TelemetryFeature.TIMESERIES) {
-                String key = request.getParameter("key");
+                String dataType = request.getParameter("key");
                 Optional<Long> ts = request.getLongParamValue("ts");
 
-                if(key == null) {
-                    String errorMsg = "Must specify key of record to delete!" ;
+                if(dataType == null) {
+                    String errorMsg = "Must specify key (dataType) of record to delete!" ;
                     log.error(errorMsg);
                     handleError(errorMsg, msg, HttpStatus.BAD_REQUEST);
                     return;
@@ -379,7 +379,7 @@ public class TelemetryRestMsgHandler extends DefaultRestMsgHandler {
                     return;
                 }
 
-                TsKvEntry entry = new BasicTsKvEntry(ts.get(), new StringDataEntry(key, key));
+                TsKvEntry entry = new BasicTsKvEntry(ts.get(), new StringDataEntry(dataType, dataType));
                 ctx.removeTimeseriesValue(entityId, entry, new PluginCallback<Void>() {
                     @Override
                     public void onSuccess(PluginContext ctx, Void value) {

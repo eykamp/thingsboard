@@ -94,4 +94,44 @@ public abstract class AbstractMqttTelemetryIntegrationTest extends AbstractContr
         assertEquals("3.0", values.get("key3").get(0).get("value"));
         assertEquals("4", values.get("key4").get(0).get("value"));
     }
+
+    @Test
+    public void testDeleteMqttData() throws Exception {
+        String clientId = MqttAsyncClient.generateClientId();
+        MqttAsyncClient client = new MqttAsyncClient(MQTT_URL, clientId);
+
+        MqttConnectOptions options = new MqttConnectOptions();
+        options.setUserName(accessToken);
+        client.connect(options);
+        Thread.sleep(3000);
+        MqttMessage message = new MqttMessage();
+        message.setPayload("{\"key1\":\"value1\", \"key2\":true, \"key3\": 3.0, \"key4\": 4}".getBytes());
+        client.publish("v1/devices/me/telemetry", message);
+
+        String deviceId = savedDevice.getId().getId().toString();
+
+        System.out.println("XYZZY xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+
+        Thread.sleep(1000);
+        Long now = new Date().getTime();
+        List<String> actualItems = doGetAsync("/api/plugins/telemetry/DEVICE/" + deviceId +  "/timeseries?keys=key1&startTs=0&endTs=" + now + "&interval=0&limit=999&agg=None", List.class);
+        Set<String> actualItemSet = new HashSet<>(actualItems);
+
+        List<String> expectedKeys = Arrays.asList("key1", "key2", "key3", "key4");
+        Set<String> expectedKeySet = new HashSet<>(expectedKeys);
+
+        // Get actual time stamp from the item -- we'll need this to delete
+
+
+//        assertEquals(expectedKeySet, actualKeySet);
+
+//        String getTelemetryValuesUrl = "/api/plugins/telemetry/DEVICE/" + deviceId +  "/values/timeseries?keys=" + String.join(",", actualKeySet);
+//        Map<String, List<Map<String, String>>> values = doGetAsync(getTelemetryValuesUrl, Map.class);
+//
+//        assertEquals("value1", values.get("key1").get(0).get("value"));
+//        assertEquals("true", values.get("key2").get(0).get("value"));
+//        assertEquals("3.0", values.get("key3").get(0).get("value"));
+//        assertEquals("4", values.get("key4").get(0).get("value"));
+
+    }
 }
